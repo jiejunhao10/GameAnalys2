@@ -1,0 +1,4 @@
+完整数据存于github：
+https://github.com/jiejunhao10/GameAnalys2.git
+
+duck目录下文件解压后放到 data 目录后可运行程序。
