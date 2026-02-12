@@ -1,0 +1,56 @@
+字段名称,用途描述,计算方式来源 (含原始表),业务意义,备注
+rid,角色 ID,ga2_dwd_v2.dim_role.rid,主键,
+reg_date,注册日期,ga2_dwd_v2.dim_role.first_login_date 转 DATE,作为 7 天窗口起点,
+first_login_date,首登时间,ga2_dwd_v2.dim_role.first_login_date,注册基准,
+first_recharge_date,首充时间,ga2_dwd_v2.dim_role.first_recharge_date,付费时点,
+is_payer_first,是否首充,dim_role.first_recharge_date IS NULL ?0:1,付费玩家留存更高,
+days_to_first_pay,首充间隔天数,"datediff (dim_role.first_recharge_date, dim_role.first_login_date); 无首充 = 9999",首充越早留存越强,
+first_pay_bin,首充分档,dim_role.first_recharge_money 分箱 (0/1/2/3/4/5),付费层级影响留存,
+first_recharge_money,首充金额,dim_role.first_recharge_money NULL->0,金额越高留存越强,
+is_old_player,是否老玩家,ga2_dwd_v2.dim_role.is_old_player,老玩家回流更稳,
+reg_is_workday,注册日是否工作日,dim_role.first_login_date->dim_date.date_key->dim_date.is_workday,工作日 / 周末玩家差异,
+exp_get_7d,经验总量,SUM(ga2_dwd_v2.fact_player_activity.exp_get),成长快留存高,缺数据
+chengjiu_get_7d,成就点总量,SUM(fact_player_activity.chengjiu_get),目标完成度高更留存,缺数据
+yuanbao_get_7d,元宝获得总量,SUM(fact_player_activity.yuanbao_get),经济参与,缺数据
+yuanbao_cost_7d,元宝消耗总量,SUM(fact_player_activity.yuanbao_cost),消耗代表投入,缺数据
+copper_get_7d,铜币获得总量,SUM(fact_player_activity.copper_get),活跃产出,缺数据
+copper_cost_7d,铜币消耗总量,SUM(fact_player_activity.copper_cost),养成投入,缺数据
+yuanbao_spend_ratio,元宝消耗率,yuanbao_cost_7d /yuanbao_get_7d (源: fact_player_activity),囤积高可能易流失,缺数据
+copper_spend_ratio,铜币消耗率,copper_cost_7d /copper_get_7d (源: fact_player_activity),使用意愿体现,缺数据
+play_cnt_total_7d,玩法总参与次数,"SUM (各玩法 cnt, 源: fact_player_activity)",参与越多留存越高,
+play_type_cnt_7d,玩法多样性,参与次数 > 0 的玩法种类数 (源: fact_player_activity),体验越广留存越稳,
+task_cnt_7d,任务参与次数,SUM(fact_player_activity.task_cnt),主线 / 任务推进,
+trunk_fb_cnt_7d,主线副本次数,SUM(fact_player_activity.trunk_fb_cnt),核心循环参与,
+biaoju_cnt_7d,镖局次数,SUM(fact_player_activity.biaoju_cnt),子玩法参与,
+boss_cnt_7d,Boss 次数,SUM(fact_player_activity.boss_cnt),高难参与度,
+fish_cnt_7d,钓鱼次数,SUM(fact_player_activity.fish_cnt),休闲参与,
+gumu_cnt_7d,古墓次数,SUM(fact_player_activity.gumu_cnt),探索参与,缺数据
+haoling_cnt_7d,号令次数,SUM(fact_player_activity.haoling_cnt),活动参与,
+leitaibiwu_cnt_7d,擂台次数,SUM(fact_player_activity.leitaibiwu_cnt),PVP 参与,
+paimai_cnt_7d,拍卖次数,SUM(fact_player_activity.paimai_cnt),交易参与,
+wanansi_cnt_7d,爬塔次数,SUM(fact_player_activity.wanansi_cnt),进度参与,
+war_fb_cnt_7d,战争副本次数,SUM(fact_player_activity.war_fb_cnt),副本参与,
+zhangmen_cnt_7d,掌门挑战次数,SUM(fact_player_activity.zhangmen_cnt),高难参与,缺数据
+zhaomu_cnt_7d,招募次数,SUM(fact_player_activity.zhaomu_cnt),抽卡参与,
+total_7d_online_sec,7 天在线时长,SUM(ga2_dwd_v2.fact_player_login_recharge.online_time_sec),总投入强度,
+first3_online_sec,前 3 天时长,"SUM (day0-2 online_time_sec, 源: fact_player_login_recharge)",早期热度,
+last3_online_sec,后 3 天时长,"SUM (day4-6 online_time_sec, 源: fact_player_login_recharge)",近期活跃度,
+is_active_day7,第 7 天是否登录,day=6 是否有登录记录 (源: fact_player_login_recharge),强留存信号,
+activity_center_ratio,活跃重心,last3_online_sec / total_7d_online_sec,后期活跃更易留存,
+last3_vs_first3,活跃趋势,last3_online_sec / first3_online_sec,升温或衰退判断,
+max_consecutive_days_7d,最大连续登录天数,MAX(fact_player_login_recharge.continue_login_date_cnt),习惯养成强,
+is_payer_7d,7 天内是否付费,pay_amt_7d>0 (源: fact_player_login_recharge),付费强信号,
+pay_amt_7d,7 天充值金额,SUM(fact_player_login_recharge.real_money),沉没成本,
+pay_cnt_7d,7 天充值次数,SUM(fact_player_login_recharge.real_cnt),付费习惯,
+pay_days_7d,付费天数,COUNT(DISTINCT log_date WHERE real_money>0),持续付费更稳,
+avg_pay_per_txn,平均单笔金额,pay_amt_7d / pay_cnt_7d,大额 / 小额结构,
+pay_trend_ratio,后期付费占比,pay_last3_amt /pay_amt_7d (源: fact_player_login_recharge),后期仍付费更稳,
+leita_win_rate,擂台胜率,胜 / 参赛 (源: fact_player_activity_detail_sec.leitaibiwu_isWin),胜率低易挫败,缺数据
+wanansi_win_rate,爬塔胜率,胜 / 参赛 (源: fact_player_activity_detail_sec.wanansi_isWin),失败多易流失,缺数据
+war_fb_through_rate,副本通关率,通关 / 参战 (源: fact_player_activity_detail_sec.war_fb_isThrough),卡关风险,
+max_wanansi_floor,爬塔最高层,MAX(fact_player_activity_detail_sec.wanansi_floor),深度进度,缺数据
+max_gumu_floor,古墓最高层,MAX(fact_player_activity_detail_sec.gumu_floor),深度进度,缺数据
+max_trunk_chapter,主线最高章,MAX(fact_player_activity_detail_sec.trunk_fb_chapter),主线进度,
+task_cnt_detail,任务条目数,COUNT(fact_player_activity_detail_sec.task_status),任务活跃,
+task_finish_cnt,任务完成数,"SUM (task_status=1, 源: fact_player_activity_detail_sec)",完成度,
+task_complete_rate,任务完成率,task_finish_cnt / task_cnt_detail,顺畅度,
